@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Sentiment Analyzer</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0e27;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: linear-gradient(125deg, #0a0e27, #1a1f3a, #0a0e27);
+            background-size: 200% 200%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 80px 20px 60px;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h1 {
+            font-size: 4em;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff, #c7d2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            font-size: 1.4em;
+            color: #94a3b8;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 60px;
+        }
+
+        .panel {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .panel:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            transform: translateY(-5px);
+            box-shadow: 0 25px 70px rgba(99, 102, 241, 0.2);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .panel-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .panel-title {
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-label {
+            display: block;
+            color: #94a3b8;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: block;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 2px dashed rgba(99, 102, 241, 0.4);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #c7d2fe;
+            font-weight: 600;
+        }
+
+        .file-input-label:hover {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: #6366f1;
+        }
+
+        .file-name {
+            font-size: 0.85em;
+            color: #6366f1;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 18px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 16px;
+            color: #fff;
+            font-size: 1em;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 140px;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        textarea::placeholder {
+            color: #475569;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-download {
+            display: none;
+            margin-top: 15px;
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .btn-download:hover {
+            box-shadow: 0 15px 40px rgba(16, 185, 129, 0.4);
+        }
+
+        .result-box {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
+            padding: 25px;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .result-content {
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+
+        .result-positive {
+            color: #10b981;
+        }
+
+        .result-negative {
+            color: #ef4444;
+        }
+
+        .result-empty {
+            color: #64748b;
+            font-weight: 400;
+        }
+
+        .graph-box {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
+            padding: 25px;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .graph-box img {
+            max-width: 100%;
+            border-radius: 12px;
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 20px;
+            border: 4px solid rgba(99, 102, 241, 0.2);
+            border-top: 4px solid #6366f1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loader-text {
+            color: #94a3b8;
+            font-size: 1.1em;
+        }
+
+        footer {
+            text-align: center;
+            padding: 60px 20px 40px;
+            color: #64748b;
+            font-size: 0.95em;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin: 50px 0;
+            padding: 30px;
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 3em;
+            }
+
+            .stats-bar {
+                flex-direction: column;
+                gap: 30px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2em;
+            }
+
+            .subtitle {
+                font-size: 1.1em;
+            }
+
+            .panel {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="animated-bg"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">🧠</div>
+                <div class="logo-text">SentimentAI</div>
+            </div>
+            <h1>Advanced Sentiment Analysis</h1>
+            <p class="subtitle">Harness the power of AI to decode emotions and opinions in text with precision and speed</p>
+        </header>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value">99%</div>
+                <div class="stat-label">Accuracy</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">&lt;1s</div>
+                <div class="stat-label">Processing Time</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">∞</div>
+                <div class="stat-label">Analyses</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-icon">⚡</div>
+                    <h2 class="panel-title">Input Data</h2>
+                </div>
+
+                <form id="predictionForm">
+                    <div class="input-group">
+                        <label class="input-label">📄 Bulk Analysis (CSV)</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="csvFileInput" accept=".csv" onchange="updateFileName()">
+                            <label for="csvFileInput" class="file-input-label">
+                                <span>📁</span>
+                                <span id="fileLabel">Choose CSV File</span>
+                            </label>
+                        </div>
+                        <div id="fileName" class="file-name"></div>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">✏️ Quick Text Analysis</label>
+                        <textarea id="textInput" placeholder="Enter your text here for instant sentiment analysis..."></textarea>
+                    </div>
+
+                    <button type="button" class="btn" onclick="predict()">
+                        <span>🚀</span>
+                        <span>Analyze Sentiment</span>
+                    </button>
+                </form>
+
+                <div class="loader" id="loader">
+                    <div class="spinner"></div>
+                    <div class="loader-text">Processing your data...</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-icon">📊</div>
+                    <h2 class="panel-title">Results</h2>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">💬 Sentiment Prediction</label>
+                    <div class="result-box">
+                        <div id="predictionResult" class="result-content result-empty">
+                            Awaiting analysis...
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">📈 Distribution Chart</label>
+                    <div class="graph-box">
+                        <div id="graphContainer" class="result-empty">
+                            Chart will appear after bulk analysis
+                        </div>
+                    </div>
+                </div>
+
+                <button id="downloadBtn" class="btn btn-download" onclick="downloadPredictions()">
+                    <span>⬇️</span>
+                    <span>Download Results</span>
+                </button>
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2025 SentimentAI • Powered by Machine Learning & Advanced NLP</p>
+        </footer>
+    </div>
+
+    <script>
+        function updateFileName() {
+            const input = document.getElementById('csvFileInput');
+            const fileLabel = document.getElementById('fileLabel');
+            const fileName = document.getElementById('fileName');
+            
+            if (input.files.length > 0) {
+                fileLabel.textContent = '✓ File Selected';
+                fileName.textContent = input.files[0].name;
+            } else {
+                fileLabel.textContent = 'Choose CSV File';
+                fileName.textContent = '';
+            }
+        }
+
+        function predict() {
+            const csvFileInput = document.getElementById("csvFileInput");
+            const textInput = document.getElementById("textInput");
+            const predictionResult = document.getElementById("predictionResult");
+            const graphContainer = document.getElementById("graphContainer");
+            const loader = document.getElementById("loader");
+            const downloadBtn = document.getElementById("downloadBtn");
+
+            predictionResult.className = "result-content result-empty";
+            predictionResult.textContent = "Processing...";
+            graphContainer.innerHTML = '<div class="result-empty">Processing...</div>';
+            downloadBtn.style.display = "none";
+
+            if (csvFileInput.files.length > 0) {
+                loader.style.display = "block";
+                const formData = new FormData();
+                formData.append("file", csvFileInput.files[0]);
+
+                fetch("/predict", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Server error: ' + response.status);
+                    }
+                    if (response.headers.get('X-Graph-Exists') === 'true') {
+                        const graphData = response.headers.get('X-Graph-Data');
+                        displayGraph(graphData);
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    loader.style.display = "none";
+                    predictionResult.className = "result-content result-positive";
+                    predictionResult.innerHTML = "✅ Analysis Complete!<br><small style='font-size: 0.7em; opacity: 0.8;'>Download your results below</small>";
+                    
+                    downloadBtn.style.display = "flex";
+                    window.downloadBlob = blob;
+                })
+                .catch(error => {
+                    loader.style.display = "none";
+                    predictionResult.className = "result-content result-negative";
+                    predictionResult.innerHTML = "❌ Error: " + error.message;
+                    console.error("Error:", error);
+                });
+
+            } else if (textInput.value.trim() !== "") {
+                loader.style.display = "block";
+                
+                fetch("/predict", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ "text": textInput.value.trim() })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Server error: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    loader.style.display = "none";
+                    console.log("Prediction response:", data); // Debug log
+                    
+                    const isPositive = data.prediction === "Positive";
+                    const emoji = isPositive ? "😊" : "😔";
+                    
+                    predictionResult.className = "result-content " + (isPositive ? "result-positive" : "result-negative");
+                    predictionResult.innerHTML = `${emoji} <strong>${data.prediction}</strong> Sentiment`;
+                    
+                    graphContainer.innerHTML = '<div class="result-empty">Chart available only for CSV bulk analysis</div>';
+                })
+                .catch(error => {
+                    loader.style.display = "none";
+                    predictionResult.className = "result-content result-negative";
+                    predictionResult.innerHTML = "❌ Error: " + error.message;
+                    console.error("Error:", error);
+                });
+            } else {
+                predictionResult.className = "result-content result-empty";
+                predictionResult.textContent = "⚠️ Please upload a CSV or enter text";
+                graphContainer.innerHTML = '<div class="result-empty">Chart will appear after bulk analysis</div>';
+            }
+        }
+
+        function downloadPredictions() {
+            if (window.downloadBlob) {
+                const url = URL.createObjectURL(window.downloadBlob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "Predictions.csv";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        function displayGraph(graphData) {
+            const graphContainer = document.getElementById("graphContainer");
+            graphContainer.innerHTML = "";
+            const graphUrl = "data:image/png;base64," + graphData;
+            const img = document.createElement('img');
+            img.src = graphUrl;
+            img.alt = "Sentiment Distribution Chart";
+            graphContainer.appendChild(img);
+        }
+    </script>
+</body>
+</html>
